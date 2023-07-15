@@ -1,0 +1,139 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1-alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+      volumes:
+        - name: config
+          configMap:
+            name: nginx-v1
+            items:
+            - key: nginx.conf
+              path: nginx.conf
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lemmy
+spec:
+  selector:
+    matchLabels:
+      app: lemmy
+  template:
+    metadata:
+      labels:
+        app: lemmy
+    spec:
+      containers:
+        - name: lemmy
+          image: dessalines/lemmy:latest
+          ports:
+            - containerPort: 8536
+          env:
+            - name: TZ
+              value: UTC
+            - name: LEMMY_CORS_ORIGIN
+              value: http://192.168.49.2:30057
+            - name: RUST_LOG
+              value: debug
+            - name: RUST_BACKTRACE
+              value: full
+          envFrom:
+            - secretRef:
+                name: lemmy
+          volumeMounts:
+            - name: config
+              mountPath: /config/config.hjson
+              subPath: config.hjson
+      volumes:
+        - name: config
+          configMap:
+            name: lemmy-v2
+            items:
+            - key: config.hjson
+              path: config.hjson
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lemmy-ui
+spec:
+  selector:
+    matchLabels:
+      app: lemmy-ui
+  template:
+    metadata:
+      labels:
+        app: lemmy-ui
+    spec:
+      containers:
+        - name: lemmy-ui
+          image: dessalines/lemmy-ui:latest
+          ports:
+            - containerPort: 1234
+          env:
+            - name: TZ
+              value: UTC
+            - name: LEMMY_UI_LEMMY_INTERNAL_HOST
+              value: lemmy:8536
+            - name: LEMMY_UI_LEMMY_EXTERNAL_HOST
+              value: localhost:8536
+            - name: LEMMY_UI_HTTPS
+              value: "true"
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pictrs
+spec:
+  selector:
+    matchLabels:
+      app: pictrs
+  template:
+    metadata:
+      labels:
+        app: pictrs
+    spec:
+      containers:
+        - name: pictrs
+          image: asonix/pictrs:0.4.0-rc.7
+          ports:
+            - containerPort: 8080
+          env:
+            - name: PICTRS__SERVER__API_KEY
+              value: lemmy
+            - name: RUST_LOG
+              value: debug
+            - name: RUST_BACKTRACE
+              value: full
+            - name: PICTRS__MEDIA__VIDEO_CODEC
+              value: vp9
+            - name: PICTRS__MEDIA__GIF__MAX_WIDTH
+              value: "256"
+            - name: PICTRS__MEDIA__GIF__MAX_HEIGHT
+              value: "256"
+            - name: PICTRS__MEDIA__GIF__MAX_AREA
+              value: "65536"
+            - name: PICTRS__MEDIA__GIF__MAX_FRAME_COUNT
+              value: "400"
