@@ -67,6 +67,8 @@ This will take a while to create all of the necessary resources. Assuming Terraf
 
 The Kubernetes configuration for Lemmy is written using the Terraform provider, but this repo also contains normal Kubernetes YAML files. These were used to test everything locally with Minikube, but are not currently maintained. If you're looking to test locally first these could be used, possibly with some tweaking.
 
+**WARNING: Since this is intended to be for local development purposes all of the passwords are extremely weak. It is not intended for production usage.**
+
 ### Usage
 
 This assumes Minikube is already installed.
