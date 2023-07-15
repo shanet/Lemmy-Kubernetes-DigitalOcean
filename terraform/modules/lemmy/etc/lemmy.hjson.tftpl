@@ -1,0 +1,15 @@
+{
+  hostname: "${domain}"
+
+  email: {
+    smtp_from_address: "noreply@${domain}"
+    smtp_login: "${smtp_username}"
+    smtp_server: "${smtp_host}"
+    tls_type: "tls"
+  }
+
+  pictrs: {
+    api_key: "${pictrs_api_key}"
+    url: "http://pictrs.${namespace}.svc.cluster.local:8080/"
+  }
+}

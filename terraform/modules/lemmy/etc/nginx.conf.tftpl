@@ -1,0 +1,79 @@
+worker_processes auto;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  upstream lemmy-backend {
+    # Forward requests to the Lemmy backend for the specified Kubernetes namespace
+    server "lemmy-backend.${namespace}.svc.cluster.local:8536";
+  }
+
+  upstream lemmy-frontend {
+    # Forward requests to the Lemmy frontend for the specified Kubernetes namespace
+    server "lemmy-frontend.${namespace}.svc.cluster.local:1234";
+  }
+
+  server {
+    # Listen on the following internal posts (public ports are configured by the load balancer service)
+    listen 1236;
+    listen 80;
+    listen 8536;
+
+    server_name ${domain};
+    server_tokens off;
+
+    gzip on;
+    gzip_types text/css application/javascript image/svg+xml;
+    gzip_vary on;
+
+    # Upload limit, relevant for pictrs
+    client_max_body_size 20M;
+
+    add_header X-Content-Type-Options nosniff;
+    add_header X-Frame-Options SAMEORIGIN;
+    add_header X-XSS-Protection "1; mode=block";
+
+    # Note: "lemmy-frontend" and "lemmy-backend" here refer to the names of the upstream blocks above rather than the names of the k8s pods
+    # Frontend requests
+    location / {
+      # Distinguish between frontend and backend requests for routes sent to the base domain
+      set $proxpass "http://lemmy-frontend";
+
+      if ($http_accept = "application/activity+json") {
+        set $proxpass "http://lemmy-backend";
+      }
+
+      if ($http_accept = "application/ld+json; profile=\"https://www.w3.org/ns/activitystreams\"") {
+        set $proxpass "http://lemmy-backend";
+      }
+
+      if ($request_method = POST) {
+        set $proxpass "http://lemmy-backend";
+      }
+
+      proxy_pass $proxpass;
+      rewrite ^(.+)/+$ $1 permanent;
+
+      # Send actual client IP upstream
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # Backend requests
+    location ~ ^/(api|pictrs|feeds|nodeinfo|.well-known) {
+      proxy_pass "http://lemmy-backend";
+
+      proxy_http_version 1.1;
+      proxy_set_header Upgrade $http_upgrade;
+      proxy_set_header Connection "upgrade";
+
+      # Send the actual client IP upstream
+      proxy_set_header Host $host;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Real-IP $remote_addr;
+    }
+  }
+}

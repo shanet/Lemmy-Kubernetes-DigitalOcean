@@ -1,0 +1,4 @@
+aws_profile                    = "default"
+digitalocean_spaces_access_key = ""
+digitalocean_spaces_secret_key = ""
+domain                         = ""
