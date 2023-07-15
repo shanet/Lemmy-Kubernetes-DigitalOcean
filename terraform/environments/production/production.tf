@@ -13,20 +13,20 @@ terraform {
     }
 
     digitalocean = {
-      source = "digitalocean/digitalocean"
+      source  = "digitalocean/digitalocean"
       version = "2.28.1"
     }
 
     kubernetes = {
-      source = "hashicorp/kubernetes"
+      source  = "hashicorp/kubernetes"
       version = "2.21.1"
     }
   }
 }
 
 variable "aws_profile" { default = "personal" }
-variable "digitalocean_spaces_access_key" {sensitive = true}
-variable "digitalocean_spaces_secret_key" {sensitive = true}
+variable "digitalocean_spaces_access_key" { sensitive = true }
+variable "digitalocean_spaces_secret_key" { sensitive = true }
 variable "domain" {}
 
 provider "aws" {

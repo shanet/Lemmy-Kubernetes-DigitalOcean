@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     digitalocean = {
-      source = "digitalocean/digitalocean"
+      source  = "digitalocean/digitalocean"
       version = "~> 2.0"
     }
   }
@@ -9,7 +9,7 @@ terraform {
 
 variable "name_prefix" {}
 variable "region" {}
-variable "size" {default = "s-1vcpu-2gb"}
+variable "size" { default = "s-1vcpu-2gb" }
 
 resource "digitalocean_kubernetes_cluster" "cluster" {
   name    = var.name_prefix

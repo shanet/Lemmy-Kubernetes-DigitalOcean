@@ -1,7 +1,7 @@
 terraform {
   required_providers {
     digitalocean = {
-      source = "digitalocean/digitalocean"
+      source  = "digitalocean/digitalocean"
       version = "~> 2.0"
     }
   }
@@ -10,7 +10,7 @@ terraform {
 variable "kubernetes_cluster_id" {}
 variable "name_prefix" {}
 variable "region" {}
-variable "size" {default = "db-s-1vcpu-1gb"}
+variable "size" { default = "db-s-1vcpu-1gb" }
 
 resource "digitalocean_database_cluster" "cluster" {
   engine     = "pg"
