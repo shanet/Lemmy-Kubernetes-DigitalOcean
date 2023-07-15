@@ -4,11 +4,6 @@ locals {
 }
 
 resource "kubernetes_service" "lemmy_backend" {
-  metadata {
-    name      = "lemmy-backend"
-    namespace = local.namespace
-  }
-
   spec {
     port {
       port        = 8536
@@ -23,14 +18,14 @@ resource "kubernetes_service" "lemmy_backend" {
   lifecycle {
     ignore_changes = [metadata[0].annotations]
   }
-}
 
-resource "kubernetes_deployment" "lemmy_backend" {
   metadata {
     name      = "lemmy-backend"
     namespace = local.namespace
   }
+}
 
+resource "kubernetes_deployment" "lemmy_backend" {
   spec {
     replicas = 1
 
@@ -41,20 +36,10 @@ resource "kubernetes_deployment" "lemmy_backend" {
     }
 
     template {
-      metadata {
-        labels = {
-          app = "lemmy-backend"
-        }
-      }
-
       spec {
         container {
           image = "dessalines/lemmy:${var.version_lemmy}"
           name  = "lemmy-backend"
-
-          port {
-            container_port = 8536
-          }
 
           env {
             name  = "TZ"
@@ -82,9 +67,13 @@ resource "kubernetes_deployment" "lemmy_backend" {
             }
           }
 
+          port {
+            container_port = 8536
+          }
+
           volume_mount {
-            name       = "config"
             mount_path = "/config/config.hjson"
+            name       = "config"
             sub_path   = "lemmy_backend.hjson"
           }
         }
@@ -97,16 +86,22 @@ resource "kubernetes_deployment" "lemmy_backend" {
           }
         }
       }
+
+      metadata {
+        labels = {
+          app = "lemmy-backend"
+        }
+      }
     }
+  }
+
+  metadata {
+    name      = "lemmy-backend"
+    namespace = local.namespace
   }
 }
 
 resource "kubernetes_config_map" "lemmy_backend" {
-  metadata {
-    name      = local.lemmy_backend_config_map
-    namespace = local.namespace
-  }
-
   data = {
     "lemmy_backend.hjson" = "${templatefile("${path.module}/etc/lemmy.hjson.tftpl", {
       domain         = var.domain,
@@ -116,16 +111,21 @@ resource "kubernetes_config_map" "lemmy_backend" {
       smtp_username  = var.smtp_username
     })}"
   }
+
+  metadata {
+    name      = local.lemmy_backend_config_map
+    namespace = local.namespace
+  }
 }
 
 resource "kubernetes_secret" "lemmy_backend" {
-  metadata {
-    name      = local.lemmy_backend_secrets
-    namespace = local.namespace
-  }
-
   data = {
     LEMMY_DATABASE_URL  = "postgres://${var.database_username}:${var.database_password}@${var.database_host}/${var.database_name}?sslmode=require"
     LEMMY_SMTP_PASSWORD = var.smtp_password
+  }
+
+  metadata {
+    name      = local.lemmy_backend_secrets
+    namespace = local.namespace
   }
 }

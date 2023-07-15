@@ -44,10 +44,10 @@ module "lemmy" {
   database_name             = module.database.database_name
   database_password         = module.database.database_cluster.password
   database_username         = module.database.database_cluster.user
-  pictrs_storage_access_key = var.digitalocean_spaces_access_key
-  pictrs_storage_secret_key = var.digitalocean_spaces_secret_key
   domain                    = var.domain
   name_prefix               = local.name_prefix
+  pictrs_storage_access_key = var.digitalocean_spaces_access_key
+  pictrs_storage_secret_key = var.digitalocean_spaces_secret_key
   region                    = var.region
   smtp_host                 = "email-smtp.us-west-2.amazonaws.com:465"
   smtp_password             = module.iam.smtp_password

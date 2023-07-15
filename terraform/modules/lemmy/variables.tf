@@ -3,10 +3,10 @@ variable "database_host" {}
 variable "database_name" {}
 variable "database_password" {}
 variable "database_username" {}
-variable "pictrs_storage_access_key" {}
-variable "pictrs_storage_secret_key" {}
 variable "domain" {}
 variable "name_prefix" {}
+variable "pictrs_storage_access_key" {}
+variable "pictrs_storage_secret_key" {}
 variable "region" {}
 variable "smtp_host" {}
 variable "smtp_password" {}

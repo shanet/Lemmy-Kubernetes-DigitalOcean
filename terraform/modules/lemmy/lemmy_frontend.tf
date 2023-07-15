@@ -1,9 +1,4 @@
 resource "kubernetes_service" "lemmy_frontend" {
-  metadata {
-    name      = "lemmy-frontend"
-    namespace = local.namespace
-  }
-
   spec {
     port {
       port        = 1234
@@ -18,14 +13,14 @@ resource "kubernetes_service" "lemmy_frontend" {
   lifecycle {
     ignore_changes = [metadata[0].annotations]
   }
-}
 
-resource "kubernetes_deployment" "lemmy_frontend" {
   metadata {
     name      = "lemmy-frontend"
     namespace = local.namespace
   }
+}
 
+resource "kubernetes_deployment" "lemmy_frontend" {
   spec {
     replicas = 1
 
@@ -36,20 +31,10 @@ resource "kubernetes_deployment" "lemmy_frontend" {
     }
 
     template {
-      metadata {
-        labels = {
-          app = "lemmy-frontend"
-        }
-      }
-
       spec {
         container {
           image = "dessalines/lemmy-ui:${var.version_lemmy}"
           name  = "lemmy-frontend"
-
-          port {
-            container_port = 1234
-          }
 
           env {
             name  = "LEMMY_UI_LEMMY_INTERNAL_HOST"
@@ -70,8 +55,23 @@ resource "kubernetes_deployment" "lemmy_frontend" {
             name  = "TZ"
             value = "UTC"
           }
+
+          port {
+            container_port = 1234
+          }
+        }
+      }
+
+      metadata {
+        labels = {
+          app = "lemmy-frontend"
         }
       }
     }
+  }
+
+  metadata {
+    name      = "lemmy-frontend"
+    namespace = local.namespace
   }
 }

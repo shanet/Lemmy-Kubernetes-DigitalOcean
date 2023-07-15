@@ -1,9 +1,4 @@
 resource "kubernetes_service" "pictrs" {
-  metadata {
-    name      = "pictrs"
-    namespace = local.namespace
-  }
-
   spec {
     port {
       port        = 8080
@@ -18,14 +13,14 @@ resource "kubernetes_service" "pictrs" {
   lifecycle {
     ignore_changes = [metadata[0].annotations]
   }
-}
 
-resource "kubernetes_deployment" "pictrs" {
   metadata {
     name      = "pictrs"
     namespace = local.namespace
   }
+}
 
+resource "kubernetes_deployment" "pictrs" {
   spec {
     replicas = 1
 
@@ -36,20 +31,10 @@ resource "kubernetes_deployment" "pictrs" {
     }
 
     template {
-      metadata {
-        labels = {
-          app = "pictrs"
-        }
-      }
-
       spec {
         container {
           image = "asonix/pictrs:${var.version_pictrs}"
           name  = "pictrs"
-
-          port {
-            container_port = 8080
-          }
 
           env {
             name  = "PICTRS__MEDIA__GIF__MAX_HEIGHT"
@@ -125,9 +110,24 @@ resource "kubernetes_deployment" "pictrs" {
             name  = "RUST_LOG"
             value = "info"
           }
+
+          port {
+            container_port = 8080
+          }
+        }
+      }
+
+      metadata {
+        labels = {
+          app = "pictrs"
         }
       }
     }
+  }
+
+  metadata {
+    name      = "pictrs"
+    namespace = local.namespace
   }
 }
 

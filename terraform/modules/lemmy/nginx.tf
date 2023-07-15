@@ -3,20 +3,6 @@ locals {
 }
 
 resource "kubernetes_service" "nginx" {
-  metadata {
-    name      = "nginx"
-    namespace = local.namespace
-
-    annotations = {
-      "service.beta.kubernetes.io/do-loadbalancer-certificate-id"                   = var.certificate_id
-      "service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records" = "true"
-      "service.beta.kubernetes.io/do-loadbalancer-enable-backend-keepalive"         = "true"
-      "service.beta.kubernetes.io/do-loadbalancer-protocol"                         = "http"
-      "service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https"           = "true"
-      "service.beta.kubernetes.io/do-loadbalancer-tls-ports"                        = "443"
-    }
-  }
-
   spec {
     type = "LoadBalancer"
 
@@ -40,14 +26,23 @@ resource "kubernetes_service" "nginx" {
   lifecycle {
     ignore_changes = [metadata[0].annotations["kubernetes.digitalocean.com/load-balancer-id"]]
   }
-}
 
-resource "kubernetes_deployment" "nginx" {
   metadata {
     name      = "nginx"
     namespace = local.namespace
-  }
 
+    annotations = {
+      "service.beta.kubernetes.io/do-loadbalancer-certificate-id"                   = var.certificate_id
+      "service.beta.kubernetes.io/do-loadbalancer-disable-lets-encrypt-dns-records" = "true"
+      "service.beta.kubernetes.io/do-loadbalancer-enable-backend-keepalive"         = "true"
+      "service.beta.kubernetes.io/do-loadbalancer-protocol"                         = "http"
+      "service.beta.kubernetes.io/do-loadbalancer-redirect-http-to-https"           = "true"
+      "service.beta.kubernetes.io/do-loadbalancer-tls-ports"                        = "443"
+    }
+  }
+}
+
+resource "kubernetes_deployment" "nginx" {
   spec {
     replicas = 1
 
@@ -58,12 +53,6 @@ resource "kubernetes_deployment" "nginx" {
     }
 
     template {
-      metadata {
-        labels = {
-          app = "nginx"
-        }
-      }
-
       spec {
         container {
           image = "nginx:${var.version_nginx}"
@@ -74,8 +63,8 @@ resource "kubernetes_deployment" "nginx" {
           }
 
           volume_mount {
-            name       = "config"
             mount_path = "/etc/nginx/nginx.conf"
+            name       = "config"
             sub_path   = "nginx.conf"
           }
         }
@@ -88,21 +77,32 @@ resource "kubernetes_deployment" "nginx" {
           }
         }
       }
+
+      metadata {
+        labels = {
+          app = "nginx"
+        }
+      }
     }
+  }
+
+  metadata {
+    name      = "nginx"
+    namespace = local.namespace
   }
 }
 
 resource "kubernetes_config_map" "nginx" {
-  metadata {
-    name      = local.nginx_config_map
-    namespace = local.namespace
-  }
-
   data = {
     "nginx.conf" = "${templatefile("${path.module}/etc/nginx.conf.tftpl", {
       domain    = var.domain,
       namespace = local.namespace,
     })}"
+  }
+
+  metadata {
+    name      = local.nginx_config_map
+    namespace = local.namespace
   }
 }
 
