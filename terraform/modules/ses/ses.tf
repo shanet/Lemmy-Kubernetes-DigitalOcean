@@ -15,6 +15,10 @@ terraform {
 variable "domain" {}
 variable "domain_id" {}
 
+locals {
+  subdomain = "mail"
+}
+
 resource "aws_ses_domain_identity" "this" {
   domain = var.domain
 }
@@ -25,7 +29,7 @@ resource "aws_ses_domain_dkim" "this" {
 
 resource "aws_ses_domain_mail_from" "this" {
   domain           = aws_ses_domain_identity.this.domain
-  mail_from_domain = "mail.${var.domain}"
+  mail_from_domain = "${local.subdomain}.${var.domain}"
 }
 
 resource "digitalocean_record" "ses_verification" {
@@ -48,14 +52,14 @@ resource "digitalocean_record" "dkim_records" {
 
 resource "digitalocean_record" "spf_txt" {
   domain = var.domain_id
-  name   = aws_ses_domain_mail_from.this.mail_from_domain
+  name   = local.subdomain
   type   = "TXT"
   value  = "v=spf1 include:amazonses.com -all."
 }
 
 resource "digitalocean_record" "spf_mx" {
   domain   = var.domain_id
-  name     = aws_ses_domain_mail_from.this.mail_from_domain
+  name     = local.subdomain
   priority = "10"
   type     = "MX"
   value    = "feedback-smtp.us-west-2.amazonses.com."
