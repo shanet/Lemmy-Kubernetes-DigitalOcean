@@ -11,6 +11,6 @@ variable "region" {}
 variable "smtp_host" {}
 variable "smtp_password" {}
 variable "smtp_username" {}
-variable "version_lemmy" { default = "0.18.3" }
+variable "version_lemmy" { default = "0.18.4" }
 variable "version_nginx" { default = "1-alpine" }
 variable "version_pictrs" { default = "0.4.0-rc.7" }
